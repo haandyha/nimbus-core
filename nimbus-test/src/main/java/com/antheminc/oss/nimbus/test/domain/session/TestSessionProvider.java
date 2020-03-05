@@ -51,8 +51,8 @@ public class TestSessionProvider extends AbstractSessionProvider {
 
 	@Override
 	public void clear() {
-		sessionID = UUID.randomUUID().toString();
+		// TODO Auto-generated method stub
 		sessionMap.clear();
 	}
-	
+
 }

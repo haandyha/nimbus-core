@@ -88,6 +88,9 @@ public class DefaultParamState<T> extends AbstractEntityState<T> implements Para
 	private boolean active = true;
 	
 	@JsonIgnore
+	private T previousLeafState;
+	
+	@JsonIgnore
 	private RemnantState<Boolean> visibleState = this.new RemnantState<>(true);
 	
 	@JsonIgnore
@@ -361,6 +364,7 @@ public class DefaultParamState<T> extends AbstractEntityState<T> implements Para
 		boolean isLeaf = isLeafOrCollectionWithLeafElems();
 		final T localPotentialOldState = isLeaf ? getState() : null;
 
+		this.previousLeafState = localPotentialOldState;
 		state = preSetState(localPotentialOldState, state, localLockId, execRt, cb);
 		
 		Action a = getAspectHandlers().getParamStateGateway()._set(this, state); 
@@ -714,23 +718,25 @@ public class DefaultParamState<T> extends AbstractEntityState<T> implements Para
 	
 	@Override
 	public boolean isVisible() {
-		// return visibleState.getCurrState();
-			boolean isVisible = visibleState.getCurrState();
-		    if(!isVisible)
-				return isVisible;
 
-		    // If the param is Visible navigate up to the top parent node - and assess if any node is set to Not Visible - then return parent node state
-			Param<?> parentParam = Optional.ofNullable(getParentModel())
-				.map(Model::getAssociatedParam)
-				.orElse(null);
-
-			if(parentParam==null)
-				return isVisible;
-
-			if(!parentParam.isVisible())
-				return false;
-
+	//	return visibleState.getCurrState();
+		
+		boolean isVisible = visibleState.getCurrState();
+		if(!isVisible)
 			return isVisible;
+		
+		// If the param is Visible navigate up to the top parent node - and assess if any node is set to Not Visible - then return parent node state
+		Param<?> parentParam = Optional.ofNullable(getParentModel())
+			.map(Model::getAssociatedParam)
+			.orElse(null);
+			
+		if(parentParam==null)
+			return isVisible;
+		
+		if(!parentParam.isVisible())
+			return false;
+		
+		return isVisible;
 	}
 	
 	public void setVisible(boolean visible) {
@@ -744,10 +750,12 @@ public class DefaultParamState<T> extends AbstractEntityState<T> implements Para
 	@Override
 	public boolean isEnabled() {
 		return enabledState.getCurrState();
+		
+		
 	}
 	
 	@Override
-	public void setEnabled(boolean enabled) {
+	public void setEnabled(boolean enabled) {       
 		boolean changed = this.enabledState.setStateConditional(enabled, ()->isActive() || !enabled);
 		if (!changed)
 			return;
@@ -1066,4 +1074,5 @@ public class DefaultParamState<T> extends AbstractEntityState<T> implements Para
 		}
 		return false;
 	}
+
 }
